@@ -31,8 +31,8 @@ const HomePage: React.FC = () => {
             <div className="md:w-1/2 md:pl-12">
               <div className="bg-white p-4 rounded-lg shadow-lg transform rotate-2">
                 <img 
-                  src="/placeholder.svg" 
-                  alt="Pickleball courts" 
+                  src="/lovable-uploads/20a6aa08-c027-4440-a235-92fcca6c609e.png" 
+                  alt="Pickleball rackets and balls" 
                   className="rounded w-full h-64 object-cover" 
                 />
               </div>
