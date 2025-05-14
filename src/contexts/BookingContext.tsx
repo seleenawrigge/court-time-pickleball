@@ -2,12 +2,12 @@
 import React, { createContext, useContext, useState } from 'react';
 import { BookingDetails, mockBookings } from '../data/bookings';
 import { Court } from '../data/courts';
-import { useToast } from '@/components/ui/use-toast';
+import { useToast } from '@/hooks/use-toast';
 
 interface BookingContextType {
   selectedCourt: Court | null;
   selectedDate: Date | null;
-  selectedTimeSlotId: number | null;
+  selectedTimeSlotIds: number[];
   bookings: BookingDetails[];
   contactInfo: {
     name: string;
@@ -16,11 +16,12 @@ interface BookingContextType {
   };
   setSelectedCourt: (court: Court | null) => void;
   setSelectedDate: (date: Date | null) => void;
-  setSelectedTimeSlotId: (timeSlotId: number | null) => void;
+  toggleTimeSlot: (timeSlotId: number) => void;
   updateContactInfo: (info: Partial<{ name: string; email: string; phone: string }>) => void;
   confirmBooking: () => void;
   isTimeSlotBooked: (courtId: number, date: string, timeSlotId: number) => boolean;
   resetBooking: () => void;
+  clearSelectedTimeSlots: () => void;
 }
 
 const BookingContext = createContext<BookingContextType | undefined>(undefined);
@@ -28,7 +29,7 @@ const BookingContext = createContext<BookingContextType | undefined>(undefined);
 export const BookingProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [selectedCourt, setSelectedCourt] = useState<Court | null>(null);
   const [selectedDate, setSelectedDate] = useState<Date | null>(null);
-  const [selectedTimeSlotId, setSelectedTimeSlotId] = useState<number | null>(null);
+  const [selectedTimeSlotIds, setSelectedTimeSlotIds] = useState<number[]>([]);
   const [bookings, setBookings] = useState<BookingDetails[]>(mockBookings);
   const [contactInfo, setContactInfo] = useState({
     name: '',
@@ -50,11 +51,44 @@ export const BookingProvider: React.FC<{ children: React.ReactNode }> = ({ child
     );
   };
 
+  // New function to toggle a time slot selection
+  const toggleTimeSlot = (timeSlotId: number) => {
+    setSelectedTimeSlotIds(prev => {
+      // If already selected, remove it
+      if (prev.includes(timeSlotId)) {
+        return prev.filter(id => id !== timeSlotId);
+      }
+      
+      // If not selected yet, add it only if it creates a consecutive sequence
+      const newSelection = [...prev, timeSlotId].sort((a, b) => a - b);
+      
+      // Check if the selection is consecutive
+      for (let i = 0; i < newSelection.length - 1; i++) {
+        if (newSelection[i + 1] - newSelection[i] !== 1) {
+          // Not consecutive, don't add
+          toast({
+            title: "Invalid Selection",
+            description: "Please select consecutive time slots only.",
+            variant: "destructive"
+          });
+          return prev;
+        }
+      }
+      
+      return newSelection;
+    });
+  };
+
+  // Function to clear selected time slots
+  const clearSelectedTimeSlots = () => {
+    setSelectedTimeSlotIds([]);
+  };
+
   const confirmBooking = () => {
-    if (!selectedCourt || !selectedDate || !selectedTimeSlotId) {
+    if (!selectedCourt || !selectedDate || selectedTimeSlotIds.length === 0) {
       toast({
         title: "Booking Incomplete",
-        description: "Please select a court, date, and time slot.",
+        description: "Please select a court, date, and at least one time slot.",
         variant: "destructive"
       });
       return false;
@@ -71,29 +105,33 @@ export const BookingProvider: React.FC<{ children: React.ReactNode }> = ({ child
 
     const formattedDate = selectedDate.toISOString().split('T')[0];
     
-    if (isTimeSlotBooked(selectedCourt.id, formattedDate, selectedTimeSlotId)) {
-      toast({
-        title: "Time Slot Unavailable",
-        description: "This time slot is already booked. Please select another time.",
-        variant: "destructive"
-      });
-      return false;
+    // Check if any selected time slot is already booked
+    for (const timeSlotId of selectedTimeSlotIds) {
+      if (isTimeSlotBooked(selectedCourt.id, formattedDate, timeSlotId)) {
+        toast({
+          title: "Time Slot Unavailable",
+          description: "One or more of your selected time slots is already booked. Please select another time.",
+          variant: "destructive"
+        });
+        return false;
+      }
     }
 
-    const newBooking: BookingDetails = {
+    // Create a booking for each selected time slot
+    const newBookings = selectedTimeSlotIds.map(timeSlotId => ({
       courtId: selectedCourt.id,
       date: formattedDate,
-      timeSlotId: selectedTimeSlotId,
+      timeSlotId: timeSlotId,
       name: contactInfo.name,
       email: contactInfo.email,
       phone: contactInfo.phone
-    };
+    }));
 
-    setBookings([...bookings, newBooking]);
+    setBookings([...bookings, ...newBookings]);
     
     toast({
       title: "Booking Confirmed!",
-      description: `Your booking for ${selectedCourt.name} on ${formattedDate} has been confirmed.`,
+      description: `Your booking for ${selectedCourt.name} on ${formattedDate} has been confirmed for ${selectedTimeSlotIds.length} hour(s).`,
     });
     
     return true;
@@ -102,7 +140,7 @@ export const BookingProvider: React.FC<{ children: React.ReactNode }> = ({ child
   const resetBooking = () => {
     setSelectedCourt(null);
     setSelectedDate(null);
-    setSelectedTimeSlotId(null);
+    setSelectedTimeSlotIds([]);
     setContactInfo({
       name: '',
       email: '',
@@ -115,16 +153,17 @@ export const BookingProvider: React.FC<{ children: React.ReactNode }> = ({ child
       value={{
         selectedCourt,
         selectedDate,
-        selectedTimeSlotId,
+        selectedTimeSlotIds,
         bookings,
         contactInfo,
         setSelectedCourt,
         setSelectedDate,
-        setSelectedTimeSlotId,
+        toggleTimeSlot,
         updateContactInfo,
         confirmBooking,
         isTimeSlotBooked,
-        resetBooking
+        resetBooking,
+        clearSelectedTimeSlots
       }}
     >
       {children}

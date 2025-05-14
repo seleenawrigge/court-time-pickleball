@@ -15,10 +15,10 @@ const BookingPage: React.FC = () => {
   const { 
     selectedCourt, 
     selectedDate, 
-    selectedTimeSlotId, 
+    selectedTimeSlotIds, 
     setSelectedCourt, 
-    setSelectedDate, 
-    setSelectedTimeSlotId,
+    setSelectedDate,
+    clearSelectedTimeSlots,
     contactInfo,
     updateContactInfo,
     confirmBooking
@@ -26,10 +26,17 @@ const BookingPage: React.FC = () => {
   
   const navigate = useNavigate();
 
+  // Clear selected time slots when court or date changes
+  useEffect(() => {
+    clearSelectedTimeSlots();
+  }, [selectedCourt, selectedDate, clearSelectedTimeSlots]);
+
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    confirmBooking();
-    navigate('/booking-confirmation');
+    const success = confirmBooking();
+    if (success) {
+      navigate('/booking-confirmation');
+    }
   };
 
   return (
@@ -74,10 +81,7 @@ const BookingPage: React.FC = () => {
                     <DatePicker date={selectedDate} setDate={setSelectedDate} />
                   </div>
                   
-                  <TimeSlotPicker 
-                    selectedTimeSlotId={selectedTimeSlotId}
-                    onSelectTimeSlot={setSelectedTimeSlotId}
-                  />
+                  <TimeSlotPicker />
                 </CardContent>
               </Card>
             </div>
@@ -98,6 +102,14 @@ const BookingPage: React.FC = () => {
                           <p className="text-sm mt-2">
                             Date: {selectedDate.toLocaleDateString()}
                           </p>
+                        )}
+                        {selectedTimeSlotIds.length > 0 && (
+                          <div className="mt-2">
+                            <p className="text-sm">Duration: {selectedTimeSlotIds.length} hour(s)</p>
+                            <p className="text-sm font-medium mt-2">
+                              Total: {selectedCourt.pricePerHour * selectedTimeSlotIds.length} LKR
+                            </p>
+                          </div>
                         )}
                       </div>
                     )}
@@ -140,7 +152,7 @@ const BookingPage: React.FC = () => {
                     <Button 
                       className="w-full mt-6" 
                       type="submit" 
-                      disabled={!selectedCourt || !selectedDate || !selectedTimeSlotId}
+                      disabled={!selectedCourt || !selectedDate || selectedTimeSlotIds.length === 0}
                     >
                       Complete Booking
                     </Button>

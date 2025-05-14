@@ -8,18 +8,30 @@ import { useNavigate } from 'react-router-dom';
 import { generateTimeSlots } from '../data/bookings';
 
 const BookingConfirmationPage: React.FC = () => {
-  const { selectedCourt, selectedDate, selectedTimeSlotId, resetBooking } = useBooking();
+  const { selectedCourt, selectedDate, selectedTimeSlotIds, resetBooking } = useBooking();
   const navigate = useNavigate();
   
   useEffect(() => {
     // If no booking details, redirect to booking page
-    if (!selectedCourt || !selectedDate || !selectedTimeSlotId) {
+    if (!selectedCourt || !selectedDate || selectedTimeSlotIds.length === 0) {
       navigate('/booking');
     }
-  }, [selectedCourt, selectedDate, selectedTimeSlotId, navigate]);
+  }, [selectedCourt, selectedDate, selectedTimeSlotIds, navigate]);
   
-  // Find the time slot text
-  const timeSlot = generateTimeSlots().find(slot => slot.id === selectedTimeSlotId);
+  const timeSlots = generateTimeSlots();
+  
+  // Find the selected time slots
+  const selectedSlots = timeSlots.filter(slot => selectedTimeSlotIds.includes(slot.id));
+  
+  // Format the time range
+  const formatTimeRange = () => {
+    if (selectedSlots.length === 0) return '';
+    if (selectedSlots.length === 1) return selectedSlots[0].time;
+    
+    const firstSlot = selectedSlots[0];
+    const lastSlot = selectedSlots[selectedSlots.length - 1];
+    return `${firstSlot.time} - ${lastSlot.time}`;
+  };
   
   const handleNewBooking = () => {
     resetBooking();
@@ -31,7 +43,7 @@ const BookingConfirmationPage: React.FC = () => {
     navigate('/my-bookings');
   };
   
-  if (!selectedCourt || !selectedDate || !selectedTimeSlotId || !timeSlot) {
+  if (!selectedCourt || !selectedDate || selectedTimeSlotIds.length === 0) {
     return null; // Will redirect in useEffect
   }
   
@@ -51,9 +63,9 @@ const BookingConfirmationPage: React.FC = () => {
               <div className="space-y-2 text-gray-700">
                 <p><span className="font-medium">Court:</span> {selectedCourt.name}</p>
                 <p><span className="font-medium">Date:</span> {selectedDate.toLocaleDateString()}</p>
-                <p><span className="font-medium">Time:</span> {timeSlot.time}</p>
-                <p><span className="font-medium">Duration:</span> 1 hour</p>
-                <p><span className="font-medium">Price:</span> {selectedCourt.pricePerHour} LKR</p>
+                <p><span className="font-medium">Time:</span> {formatTimeRange()}</p>
+                <p><span className="font-medium">Duration:</span> {selectedTimeSlotIds.length} hour(s)</p>
+                <p><span className="font-medium">Price:</span> {selectedCourt.pricePerHour * selectedTimeSlotIds.length} LKR</p>
               </div>
             </div>
             
