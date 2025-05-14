@@ -53,7 +53,7 @@ const BookingConfirmationPage: React.FC = () => {
                 <p><span className="font-medium">Date:</span> {selectedDate.toLocaleDateString()}</p>
                 <p><span className="font-medium">Time:</span> {timeSlot.time}</p>
                 <p><span className="font-medium">Duration:</span> 1 hour</p>
-                <p><span className="font-medium">Price:</span> ${selectedCourt.pricePerHour}</p>
+                <p><span className="font-medium">Price:</span> {selectedCourt.pricePerHour} LKR</p>
               </div>
             </div>
             

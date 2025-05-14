@@ -28,10 +28,8 @@ const BookingPage: React.FC = () => {
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    const success = confirmBooking();
-    if (success) {
-      navigate('/booking-confirmation');
-    }
+    confirmBooking();
+    navigate('/booking-confirmation');
   };
 
   return (
@@ -64,7 +62,7 @@ const BookingPage: React.FC = () => {
                           </div>
                           <div>
                             <h3 className="font-medium">{court.name}</h3>
-                            <p className="text-sm text-gray-600">{court.type.charAt(0).toUpperCase() + court.type.slice(1)} | ${court.pricePerHour}/hr</p>
+                            <p className="text-sm text-gray-600">{court.type.charAt(0).toUpperCase() + court.type.slice(1)} | {court.pricePerHour} LKR/hr</p>
                           </div>
                         </CardContent>
                       </Card>
@@ -95,7 +93,7 @@ const BookingPage: React.FC = () => {
                     {selectedCourt && (
                       <div className="mb-4 p-4 bg-accent rounded-md">
                         <h4 className="font-medium">{selectedCourt.name}</h4>
-                        <p className="text-sm">${selectedCourt.pricePerHour} per hour</p>
+                        <p className="text-sm">{selectedCourt.pricePerHour} LKR per hour</p>
                         {selectedDate && (
                           <p className="text-sm mt-2">
                             Date: {selectedDate.toLocaleDateString()}

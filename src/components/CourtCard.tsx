@@ -38,7 +38,7 @@ const CourtCard: React.FC<CourtCardProps> = ({ court }) => {
       <div className="p-6">
         <div className="flex justify-between items-start mb-4">
           <h3 className="text-xl font-bold text-gray-900">{court.name}</h3>
-          <span className="text-lg font-semibold text-primary">${court.pricePerHour}/hr</span>
+          <span className="text-lg font-semibold text-primary">{court.pricePerHour} LKR/hr</span>
         </div>
         <p className="text-gray-600 mb-4">{court.description}</p>
         <div className="mb-6">
